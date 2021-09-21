@@ -16,18 +16,53 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Introduction
 
+```{r echo=FALSE}
+
+```
 
 ## Data Exploration
+
+```{r echo=FALSE, warning=FALSE, error=FALSE}
+# Libraries
+
+```
+
+
+```{r}
+# Import data
+training_data <- read.csv("https://raw.githubusercontent.com/ltcancel/DATA621/main/Homework1/moneyball-training-data.csv", header = TRUE)
+
+eval_data <- read.csv("https://raw.githubusercontent.com/ltcancel/DATA621/main/Homework1/moneyball-evaluation-data.csv", header = TRUE)
+```
+
+```{r}
+# preview data
+head(training_data)
+```
+
+```{r}
+# summaries
+summary(training_data)
+```
 
 
 ## Data Preparation
 
+```{r}
+
+```
 
 ## Build Models
 
+```{r}
+
+```
 
 ## Selected Models
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+```{r}
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+```
+
+
+
