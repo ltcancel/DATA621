@@ -1,0 +1,30 @@
+---
+title: "Homework3"
+author: "LeTicia Cancel"
+date: "3/2/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+#libraries
+
+```
+
+# Data Exploration
+
+```{r}
+#import data from github
+train_data <- read.csv("") 
+
+eval_data <- 
+```
+
+
+
+
+
