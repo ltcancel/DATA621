@@ -52,6 +52,14 @@ for(i in 1:13){
   hist(data[,i], main = colnames(data)[i], xlab = colnames(data)[i], col = 'yellow')
 }
 ```
+create age buckets
+```{r}
+data$age_bucket <- as.factor(ifelse(data$age<=20,"0-20", ifelse(data$age<=30,"21-30",ifelse(data$age<=40,"31-40",ifelse(data$age<=50,"41-50",ifelse(data$age<=60,"51-60",ifelse(data$age<=70,"61-70",ifelse(data$age<=80,"71-80",ifelse(data$age<=90,"81-90","90+")))))))))
+
+head(data)
+```
+
+
 
 from correlation plot, it seems suburb border to charles river will have less impact on predicting target for some predictors
 ```{r warning=FALSE, message=FALSE}
