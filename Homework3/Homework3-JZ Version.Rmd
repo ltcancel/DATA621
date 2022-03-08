@@ -1,0 +1,126 @@
+---
+title: "621-hw3"
+author: "Document Author"
+date: "`r Sys.Date()`"
+output:
+  prettydoc::html_pretty:
+    theme: architect
+    highlight: github
+---
+## libraries
+```{r warning=FALSE, message=FALSE}
+library(reshape2)
+library(ggplot2)
+library(dplyr)
+library(psych)
+library(MASS)
+library(car)
+library(Hmisc)
+```
+
+## explore data
+```{r}
+# load dataset
+data <- read.csv('https://raw.githubusercontent.com/Sugarcane-svg/R/main/621/hw3/crime-training-data_modified.csv')
+head(data)
+```
+13 variables in total
+```{r}
+# number of variables in total
+names(data) %>% length()
+```
+from summary, there are no missing values reported but some predictors are skewed.
+```{r}
+# brief summary
+summary(data)
+```
+
+
+```{r}
+# make box plot for all variables
+data.m <- melt(data, id.vars = 'target')
+head(data.m)
+ggplot(data.m, aes(x = variable, y = value)) + geom_boxplot() + facet_wrap(~ variable, scales = 'free')
+```
+
+```{r}
+# histogram of all columns
+par(mar = c(1,1,1,1))
+hist.data.frame(data)
+```
+
+from correlation plot, it seems suburb border to charles river will have less impact on predicting target for some predictors
+```{r warning=FALSE, message=FALSE}
+# correlation between predictors and response
+par(mar = c(1,1,1,1))
+data %>% corPlot(main = 'whole data set')
+```
+
+the correlation between predictors doesn't appear to be linear
+```{r}
+# correlation between predictors
+pairs(data)
+```
+
+## data prepreparation
+since there are predictors highly skewed, we need to transform them
+```{r}
+# transform zn
+
+```
+
+## building model
+
+### linear regression
+
+from the summary, the model only explains 61% of data, and there are more than one predictors don't have significant impact in predicting data, the added variable plot also showing the same.
+
+from residual plot, the variance of residual is not constant. QQ plot shows non-normality happen in the data. variance of error is not elliptically symmetric, it also shows some pattern
+
+As a result, this is a not a valid model for data
+```{r}
+data.lm <- lm(target ~ ., data = data)
+summary(data.lm)
+plot(data.lm)
+```
+### box-cox transformation
+
+$$ Y_i^{(\lambda)} = \{^{\frac{Y_i^{\lambda} -1}{\lambda} (\lambda \neq0)}_{log(Y_i) (\lambda = 0)}$$
+boxcox is not going to transform data when the value is less or equal to 0, so I add 1 to the target value. It wont change the shape of the plot.
+```{r}
+# apply box-cox transformation
+data.bc = boxcox(target+1~., data = data)
+
+# obtain lambda value
+lamda <- data.bc$x[which.max(data.bc$y)]
+
+# apply power back to the model
+back_transform <- function(y, lamda = 0){
+  if(lamda == 0){
+    log(y)
+  }else{
+    ((y+1)^lamda)/lamda
+  }
+}
+
+data['target.t'] = back_transform(data$target, lamda)
+hist(data$target.t)
+```
+```{r}
+# re-run linear mode with transformation
+lm(target.t ~ . - target, data = data)
+```
+
+### logistic regression
+
+
+```{r}
+data.lm2 <- lm(I((target+1)^(-0.14))~., data = data)
+summary(data.lm2)
+plot(data.lm2)
+```
+
+
+
+
+
