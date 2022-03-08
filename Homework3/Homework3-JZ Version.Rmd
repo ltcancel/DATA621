@@ -45,8 +45,12 @@ ggplot(data.m, aes(x = variable, y = value)) + geom_boxplot() + facet_wrap(~ var
 
 ```{r}
 # histogram of all columns
-par(mar = c(1,1,1,1))
-hist.data.frame(data)
+#par(mar = c(1,1,1,1))
+#hist.data.frame(data)
+par(mfrow = c(4,3))
+for(i in 1:13){
+  hist(data[,i], main = colnames(data)[i], xlab = colnames(data)[i], col = 'yellow')
+}
 ```
 
 from correlation plot, it seems suburb border to charles river will have less impact on predicting target for some predictors
