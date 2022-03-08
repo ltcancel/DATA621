@@ -1,6 +1,6 @@
 ---
 title: "Homework3"
-author: "LeTicia Cancel"
+author: "LeTicia Cancel, Chi Pong, Euclid Zhang, Jie Zou, Joseph Connolly"
 date: "3/2/2022"
 output: html_document
 ---
@@ -12,19 +12,40 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 #libraries
-
+library(corrplot)
+source("http://www.sthda.com/upload/rquery_cormat.r")
 ```
 
 # Data Exploration
 
 ```{r}
 #import data from github
-train_data <- read.csv("") 
+train_data <- read.csv("https://raw.githubusercontent.com/ltcancel/DATA621/main/Homework3/crime-training-data_modified.csv", header = TRUE) 
 
-eval_data <- 
+eval_data <- read.csv("https://raw.githubusercontent.com/ltcancel/DATA621/main/Homework3/crime-evaluation-data_modified.csv", header = TRUE)
 ```
 
+```{r}
+head(train_data)
+head(eval_data)
+```
 
+```{r}
+summary(train_data)
+```
 
+Correlation Matrix 
+target and nox = 0.73
+target and rad = 0.63
+target and age = 0.63
+target and dis = -0.62
+tax and rad = 0.91
+nox and indus = 0.76
+nox and age = 0.74
+indus and tax = 0.73
+rm and lstat = -0.63
+```{r}
+rquery.cormat(train_data)
+```
 
 
