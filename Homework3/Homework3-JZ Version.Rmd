@@ -7,7 +7,9 @@ output:
     theme: architect
     highlight: github
 ---
+
 ## libraries
+
 ```{r warning=FALSE, message=FALSE}
 library(reshape2)
 library(ggplot2)
@@ -19,22 +21,26 @@ library(Hmisc)
 ```
 
 ## explore data
+
 ```{r}
 # load dataset
 data <- read.csv('https://raw.githubusercontent.com/Sugarcane-svg/R/main/621/hw3/crime-training-data_modified.csv')
 head(data)
 ```
+
 13 variables in total
+
 ```{r}
 # number of variables in total
 names(data) %>% length()
 ```
+
 from summary, there are no missing values reported but some predictors are skewed.
+
 ```{r}
 # brief summary
 summary(data)
 ```
-
 
 ```{r}
 # make box plot for all variables
@@ -52,16 +58,37 @@ for(i in 1:13){
   hist(data[,i], main = colnames(data)[i], xlab = colnames(data)[i], col = 'yellow')
 }
 ```
+
 create age buckets
+
 ```{r}
 data$age_bucket <- as.factor(ifelse(data$age<=20,"0-20", ifelse(data$age<=30,"21-30",ifelse(data$age<=40,"31-40",ifelse(data$age<=50,"41-50",ifelse(data$age<=60,"51-60",ifelse(data$age<=70,"61-70",ifelse(data$age<=80,"71-80",ifelse(data$age<=90,"81-90","90+")))))))))
 
 head(data)
 ```
 
+boxplots
 
+```{r}
+par(mfrow=c(2,2))
+boxplot(zn~target, ylab = "Zone", xlab = "Target", col="light blue", data=data)
+boxplot(indus~target, ylab = "Business", xlab = "Target", col="light blue", data=data)
+#boxplot(chas~target, ylab = "Charles River", xlab = "Target", col="light blue", data=data)
+boxplot(nox~target, ylab = "Nitrogen Oxide", xlab = "Target", col="light blue", data=data)
+boxplot(rm~target, ylab = "Avg Room", xlab = "Target", col="light blue", data=data)
+boxplot(age~target, ylab = "Age", xlab = "Target", col="light blue", data=data)
+boxplot(dis~target, ylab = "Distance Boston Employment Center", xlab = "Target", col="light blue", data=data)
+boxplot(rad~target, ylab = "Radial Highways", xlab = "Target", col="light blue", data=data)
+boxplot(tax~target, ylab = "Tax Rate", xlab = "Target", col="light blue", data=data)
+boxplot(ptratio~target, ylab = "Pupil-Teacher Ratio", xlab = "Target", col="light blue", data=data)
+#boxplot(black~target, ylab = "Proportion of Blacks", xlab = "Target", col="light blue", data=data)
+boxplot(lstat~target, ylab = "Lower Status", xlab = "Target", col="light blue", data=data)
+boxplot(medv~target, ylab = "Owner-Occupied Homes in $1000s", xlab = "Target", col="light blue", data=data)
+#boxplot(age_bucket~target, ylab = "Age Bucket", xlab = "Target", col="light blue", data=data)
+```
 
 from correlation plot, it seems suburb border to charles river will have less impact on predicting target for some predictors
+
 ```{r warning=FALSE, message=FALSE}
 # correlation between predictors and response
 par(mar = c(1,1,1,1))
@@ -69,13 +96,16 @@ data %>% corPlot(main = 'whole data set')
 ```
 
 the correlation between predictors doesn't appear to be linear
+
 ```{r}
 # correlation between predictors
 pairs(data)
 ```
 
 ## data prepreparation
+
 since there are predictors highly skewed, we need to transform them
+
 ```{r}
 # transform zn
 
@@ -90,15 +120,17 @@ from the summary, the model only explains 61% of data, and there are more than o
 from residual plot, the variance of residual is not constant. QQ plot shows non-normality happen in the data. variance of error is not elliptically symmetric, it also shows some pattern
 
 As a result, this is a not a valid model for data
+
 ```{r}
 data.lm <- lm(target ~ ., data = data)
 summary(data.lm)
 plot(data.lm)
 ```
+
 ### box-cox transformation
 
-$$ Y_i^{(\lambda)} = \{^{\frac{Y_i^{\lambda} -1}{\lambda} (\lambda \neq0)}_{log(Y_i) (\lambda = 0)}$$
-boxcox is not going to transform data when the value is less or equal to 0, so I add 1 to the target value. It wont change the shape of the plot.
+$$ Y_i^{(\lambda)} = \{^{\frac{Y_i^{\lambda} -1}{\lambda} (\lambda \neq0)}_{log(Y_i) (\lambda = 0)}$$ boxcox is not going to transform data when the value is less or equal to 0, so I add 1 to the target value. It wont change the shape of the plot.
+
 ```{r}
 # apply box-cox transformation
 data.bc = boxcox(target+1~., data = data)
@@ -118,6 +150,7 @@ back_transform <- function(y, lamda = 0){
 data['target.t'] = back_transform(data$target, lamda)
 hist(data$target.t)
 ```
+
 ```{r}
 # re-run linear mode with transformation
 lm(target.t ~ . - target, data = data)
@@ -125,14 +158,8 @@ lm(target.t ~ . - target, data = data)
 
 ### logistic regression
 
-
 ```{r}
 data.lm2 <- lm(I((target+1)^(-0.14))~., data = data)
 summary(data.lm2)
 plot(data.lm2)
 ```
-
-
-
-
-
