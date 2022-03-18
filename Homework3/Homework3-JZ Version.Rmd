@@ -18,13 +18,14 @@ library(psych)
 library(MASS)
 library(car)
 library(Hmisc)
+library(corrplot)
 ```
 
 ## explore data
 
 ```{r}
 # load dataset
-data <- read.csv('https://raw.githubusercontent.com/Sugarcane-svg/R/main/621/hw3/crime-training-data_modified.csv')
+data <- read.csv('crime-training-data_modified.csv')
 head(data)
 ```
 
@@ -44,55 +45,20 @@ summary(data)
 
 ```{r}
 # make box plot for all variables
-data.m <- melt(data, id.vars = 'target')
+data.m <- melt(data, id.vars = 'target')%>% mutate(target = as.factor(target))
 head(data.m)
-ggplot(data.m, aes(x = variable, y = value)) + geom_boxplot() + facet_wrap(~ variable, scales = 'free')
+ggplot(data.m, aes(x = variable, y = value, fill = target)) + geom_boxplot() + facet_wrap(~ variable, scales = 'free')
 ```
 
 ```{r}
-# histogram of all columns
-#par(mar = c(1,1,1,1))
-#hist.data.frame(data)
-par(mfrow = c(4,3))
-for(i in 1:13){
-  hist(data[,i], main = colnames(data)[i], xlab = colnames(data)[i], col = 'yellow')
-}
+# check normality and skewness
+data.m %>% ggplot(aes(x = value)) + geom_density() + facet_wrap(~variable, scale = 'free')
 ```
-
-create age buckets
-
-```{r}
-data$age_bucket <- as.factor(ifelse(data$age<=20,"0-20", ifelse(data$age<=30,"21-30",ifelse(data$age<=40,"31-40",ifelse(data$age<=50,"41-50",ifelse(data$age<=60,"51-60",ifelse(data$age<=70,"61-70",ifelse(data$age<=80,"71-80",ifelse(data$age<=90,"81-90","90+")))))))))
-
-head(data)
-```
-
-boxplots
-
-```{r}
-par(mfrow=c(2,2))
-boxplot(zn~target, ylab = "Zone", xlab = "Target", col="light blue", data=data)
-boxplot(indus~target, ylab = "Business", xlab = "Target", col="light blue", data=data)
-#boxplot(chas~target, ylab = "Charles River", xlab = "Target", col="light blue", data=data)
-boxplot(nox~target, ylab = "Nitrogen Oxide", xlab = "Target", col="light blue", data=data)
-boxplot(rm~target, ylab = "Avg Room", xlab = "Target", col="light blue", data=data)
-boxplot(age~target, ylab = "Age", xlab = "Target", col="light blue", data=data)
-boxplot(dis~target, ylab = "Distance Boston Employment Center", xlab = "Target", col="light blue", data=data)
-boxplot(rad~target, ylab = "Radial Highways", xlab = "Target", col="light blue", data=data)
-boxplot(tax~target, ylab = "Tax Rate", xlab = "Target", col="light blue", data=data)
-boxplot(ptratio~target, ylab = "Pupil-Teacher Ratio", xlab = "Target", col="light blue", data=data)
-#boxplot(black~target, ylab = "Proportion of Blacks", xlab = "Target", col="light blue", data=data)
-boxplot(lstat~target, ylab = "Lower Status", xlab = "Target", col="light blue", data=data)
-boxplot(medv~target, ylab = "Owner-Occupied Homes in $1000s", xlab = "Target", col="light blue", data=data)
-#boxplot(age_bucket~target, ylab = "Age Bucket", xlab = "Target", col="light blue", data=data)
-```
-
-from correlation plot, it seems suburb border to charles river will have less impact on predicting target for some predictors
 
 ```{r warning=FALSE, message=FALSE}
 # correlation between predictors and response
 par(mar = c(1,1,1,1))
-data %>% corPlot(main = 'whole data set')
+data%>% corPlot()
 ```
 
 the correlation between predictors doesn't appear to be linear
@@ -102,18 +68,9 @@ the correlation between predictors doesn't appear to be linear
 pairs(data)
 ```
 
-## data prepreparation
+## data transfromation
 
-since there are predictors highly skewed, we need to transform them
-
-```{r}
-# transform zn
-
-```
-
-## building model
-
-### linear regression
+### linear regression(not valid)
 
 from the summary, the model only explains 61% of data, and there are more than one predictors don't have significant impact in predicting data, the added variable plot also showing the same.
 
@@ -127,39 +84,157 @@ summary(data.lm)
 plot(data.lm)
 ```
 
-### box-cox transformation
+### transform variable
 
-$$ Y_i^{(\lambda)} = \{^{\frac{Y_i^{\lambda} -1}{\lambda} (\lambda \neq0)}_{log(Y_i) (\lambda = 0)}$$ boxcox is not going to transform data when the value is less or equal to 0, so I add 1 to the target value. It wont change the shape of the plot.
-
-```{r}
-# apply box-cox transformation
-data.bc = boxcox(target+1~., data = data)
-
-# obtain lambda value
-lamda <- data.bc$x[which.max(data.bc$y)]
-
-# apply power back to the model
-back_transform <- function(y, lamda = 0){
-  if(lamda == 0){
+```{r warning=FALSE, message=FALSE}
+attach(data)
+back_transform <- function(y, lamda){
+  if(lamda ==0L){
     log(y)
   }else{
-    ((y+1)^lamda)/lamda
+    y^lamda/lamda
   }
 }
+# transform nox
+nox.bc <- boxcox(lm(nox ~ 1, data))
+nox.pow <- nox.bc$x[which.max(nox.bc$y)]
+nox.t <- back_transform(nox, nox.pow)
 
-data['target.t'] = back_transform(data$target, lamda)
-hist(data$target.t)
+# transform age
+age.bc <- boxcox(lm(age ~ 1, data))
+age.pow <- age.bc$x[which.max(age.bc$y)]
+age.t <- back_transform(age, age.pow)
+
+# transform dis
+dis.bc <- boxcox(lm(dis ~ 1, data))
+dis.pow <- dis.bc$x[which.max(dis.bc$y)]
+dis.t <- back_transform(dis, dis.pow)
+
+# transform rad
+rad.bc <- boxcox(lm(rad ~ 1, data))
+rad.pow <- rad.bc$x[which.max(rad.bc$y)]
+rad.t <- back_transform(rad, rad.pow)
+
+# transform tax
+tax.bc <- boxcox(lm(tax ~ 1, data))
+tax.pow <- tax.bc$x[which.max(tax.bc$y)]
+tax.t <- back_transform(tax, tax.pow)
+
+# transform ptratio
+ptratio.bc <- boxcox(lm(ptratio ~ 1, data))
+ptratio.pow <- ptratio.bc$x[which.max(ptratio.bc$y)]
+ptratio.t <- back_transform(ptratio, ptratio.pow)
+
+# transform medv
+medv.bc <- boxcox(lm(medv ~ 1, data))
+medv.pow <- medv.bc$x[which.max(medv.bc$y)]
+medv.t <- back_transform(medv, medv.pow)
+
+subset <- data.frame(target, nox.t, age.t, dis.t, rad.t, tax.t, ptratio.t, medv.t)
 ```
 
 ```{r}
-# re-run linear mode with transformation
-lm(target.t ~ . - target, data = data)
+# check variables after transformation
+hist.data.frame(subset)
+melt(subset, id.vars = 'target') %>% 
+  mutate(target = as.factor(target)) %>% 
+  ggplot(aes(x = value)) +
+  geom_density() +
+  facet_wrap(~variable, scale = 'free')+
+  labs(title = 'transfromed significant variables')
 ```
+
+## building model
 
 ### logistic regression
 
+#### first model(logit - general)
+
+from added variable plot, we see that there are some variables are not helping much in predicting response variable, therefore, I am going to reduce these variables.
+
 ```{r}
-data.lm2 <- lm(I((target+1)^(-0.14))~., data = data)
-summary(data.lm2)
-plot(data.lm2)
+logit1 <- glm(target ~ . , data = data, family = binomial)
+summary(logit1)
+```
+
+```{r}
+# diagnostic plot
+plot(resid(logit1)~predict(logit1, type = 'link'))
+```
+
+```{r}
+# check outliers
+plot(logit1)
+```
+
+added variable plot prove that variables 'nox', 'age', 'dis', 'rad', 'tax', 'ptratio' and 'medv' have statistically significance in predicting response variable. Since these variable are either skewed or have outliers or both. I am going to transform these variable individually.
+
+```{r}
+# added variable plot
+avPlots(logit1)
+```
+
+```{r}
+# R^2
+1-logit1$deviance/logit1$null.deviance
+```
+
+```{r}
+# plot logistic regression again predictors
+x_range <- seq(0, 465, 0.1)
+generated_data <- as.data.frame(expand.grid(x=x_range, y=c(zn, indus, chas, nox, rm, age, dis, rad, tax, ptratio, lstat, medv)) )
+plot(x_range, predict(logit1, type = 'response'))
+```
+
+### second model(logit - reduced)
+
+```{r}
+subset <- subset[-c(338, 457, 14, 62), ]
+
+logit2 <- glm(target ~ . -tax.t, data = subset, family = binomial)
+summary(logit2)
+```
+
+```{r}
+# diagnostic plot
+plot(resid(logit2)~predict(logit2, type = 'link'))
+```
+
+```{r}
+# R^2
+1-logit2$deviance/logit2$null.deviance
+```
+
+### third model (probit)
+
+```{r}
+probit3 <- glm(target ~ . -tax.t, data = subset, family = binomial(link = 'probit'))
+summary(probit3)
+```
+
+```{r}
+# diagnostic plot
+plot(resid(probit3,type = 'deviance')~predict(probit3, type = 'link'))
+```
+
+```{r}
+# R^2
+1-probit3$deviance/probit3$null.deviance
+```
+
+## model selection
+
+since the first model the considered 'raw' because it doesn't do anything to variable, and $R^2$ is lower than the rest of two models, so we are not consider the first model.
+
+comparing the second and the third model, the p value is greater than statistically significant level, which means that the second and the third model have no significant difference. Choose either one would be fine in our case.
+
+```{r}
+anova(logit2, probit3)
+```
+
+## prediction
+
+```{r}
+eval <- read.csv('crime-evaluation-data_modified.csv')
+head(eval)
 ```
