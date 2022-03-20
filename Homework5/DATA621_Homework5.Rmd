@@ -1,0 +1,49 @@
+---
+title: "Homework5"
+author: "LeTicia Cancel, Chi Pong, Euclid Zhang, Jie Zou, Joseph Connolly"
+date: "3/17/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#libraries
+```
+
+
+## Data Exploration
+
+```{r}
+#import data from github
+train_data <- read.csv("https://raw.githubusercontent.com/ltcancel/DATA621/main/Homework5/wine-training-data.csv", header = TRUE) 
+
+eval_data <- read.csv("https://raw.githubusercontent.com/ltcancel/DATA621/main/Homework5/wine-evaluation-data.csv", header = TRUE)
+```
+
+
+```{r}
+head(train_data)
+head(eval_data)
+```
+
+```{r}
+summary(train_data)
+```
+
+
+## Data Preparation
+
+
+
+
+## Build Models
+
+
+
+
+## Select Models
+
+
