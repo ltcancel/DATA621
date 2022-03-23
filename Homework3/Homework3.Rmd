@@ -10,42 +10,99 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-```{r}
+```{r message=FALSE, warning=FALSE, error=FALSE}
 #libraries
+library("patchwork")
+library("faraway")
+library("pROC")
 library(corrplot)
+library(reshape2)
+library(ggplot2)
+library(dplyr)
+library(psych)
+library(MASS)
+library(car)
+library(corrplot)
+library(caret)
+library(performance) # overall model performace
+library(AICcmodavg) # model selection
+library(bestglm)
 source("http://www.sthda.com/upload/rquery_cormat.r")
 ```
 
 # Data Exploration
 
 ```{r}
-#import data from github
-train_data <- read.csv("https://raw.githubusercontent.com/ltcancel/DATA621/main/Homework3/crime-training-data_modified.csv", header = TRUE) 
-
-eval_data <- read.csv("https://raw.githubusercontent.com/ltcancel/DATA621/main/Homework3/crime-evaluation-data_modified.csv", header = TRUE)
+train_df <- read.csv("https://raw.githubusercontent.com/ezaccountz/DATA_621/main/HW3/crime-training-data_modified.csv")
+test_df <- read.csv("https://raw.githubusercontent.com/ezaccountz/DATA_621/main/HW3/crime-evaluation-data_modified.csv")
 ```
+
+From the summary, it does not seem to have missing value. However, variables like 'zn', 'indus', 'age' and so on are skewed, additionally, variable 'chas' and response variable should be factor type instead of int.
+```{r}
+summary(train_df)
+```
+
+### plots
+
+from boxplot, predictors are split by response variable, except 'nox', 'rad', and dummy variable 'chas' have no outliers, the rest of them have more/less outliers
+
+```{r fig.height=10, fig.width=10}
+par(mfrow=c(4,3))
+predictors <- colnames(train_df)
+predictors <- predictors[!predictors %in% c("target")]
+
+for(preditor in predictors) {
+  boxplot(train_df[,preditor]~train_df$target,main=preditor, 
+          xlab = "target", ylab = preditor)
+}
+```
+
+
+As I mentioned above, there are some variables skewed(not include dummy variable), some are bi-model, only 'rm' looks pretty normal.
+
+```{r fig.height=6, fig.width=10}
+# check normality and skewness
+train_df.m <- melt(train_df, id.vars = 'target')%>% mutate(target = as.factor(target))
+train_df.m %>% ggplot(aes(x = value)) + geom_density() + facet_wrap(~variable, scale = 'free') + theme_classic()
+```
+
+
+## * **Correlations**
+
+Now let's look at the correlations between the variables  
+```{r fig.height=10, fig.width=10}
+corrplot(cor(train_df, use = "na.or.complete"), method = 'number', type = 'lower', diag = FALSE, tl.srt = 0.1)
+```
+
+
+
+## Data Transformation
+
+### transform type
 
 ```{r}
-head(train_data)
-head(eval_data)
+train_df$chas <- as.factor(data$chas)
+train_df$target <- as.factor(data$target)
 ```
 
-```{r}
-summary(train_data)
+### transform variable
+
+corresponding library is required to perform the function, [reference is here](https://machinelearningmastery.com/pre-process-your-dataset-in-r/).
+
+use Box-Cox transformation as well as center and scale, just so variables are in the same scale, from the plot, we see that variables are more normal than raw data. Even though there are some variables still look problematic, let's stay with it now.
+
+```{r warning=FALSE}
+# use transform data using boxcox, in the mean time center and scale them.
+preprocess <- preProcess(train_df %>% dplyr::select(-target), method = c('BoxCox', 'center', 'scale'))
+
+# get transformed data set=
+trans.df <- predict(preprocess, data %>% dplyr::select(-target)) %>% mutate(target = as.factor(data$target))
+
+# plot density to check skewness and normality
+trans.df.m <- trans.df %>% mutate(target = as.factor(data$target)) %>% melt(id.vars = 'target')
+
+trans.df.m %>% ggplot(aes(x = value)) + geom_density() + facet_wrap(~variable, scale = 'free')
 ```
 
-Correlation Matrix 
-target and nox = 0.73
-target and rad = 0.63
-target and age = 0.63
-target and dis = -0.62
-tax and rad = 0.91
-nox and indus = 0.76
-nox and age = 0.74
-indus and tax = 0.73
-rm and lstat = -0.63
-```{r}
-rquery.cormat(train_data)
-```
 
 
