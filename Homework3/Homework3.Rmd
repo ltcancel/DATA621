@@ -24,7 +24,7 @@ library(MASS)
 library(car)
 library(corrplot)
 library(caret)
-library(performance) # overall model performace
+library(performance) # overall model performance
 library(AICcmodavg) # model selection
 library(bestglm)
 source("http://www.sthda.com/upload/rquery_cormat.r")
