@@ -3,9 +3,9 @@ title: "DATA_621_HW3"
 author: "Chi Pong, Euclid Zhang, Jie Zou, Joseph Connolly, LeTicia Cancel"
 date: "3/31/2022"
 output:
-  pdf_document: default
   html_document:
     df_print: paged
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
